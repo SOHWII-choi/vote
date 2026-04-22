@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KT M&S 비전 투표</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Apple SD Gothic Neo', 'Pretendard', 'Noto Sans KR', sans-serif;
+      background: #F6F8FF;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    #app { width: 100%; max-width: 390px; min-height: 100vh; background: #F6F8FF; }
+
+    .header {
+      background: #fff;
+      padding: 18px 20px 14px;
+      border-bottom: 1px solid #EEF0F8;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-title { font-size: 17px; font-weight: 800; color: #1A1D2E; }
+    .header-title span { color: #3B6BF5; }
+    .btn-ghost {
+      font-size: 12px; color: #3B6BF5; background: #EEF3FF;
+      border: none; border-radius: 20px; padding: 5px 12px;
+      font-weight: 600; cursor: pointer;
+    }
+    .btn-back {
+      background: none; border: none; font-size: 20px;
+      cursor: pointer; color: #1A1D2E; padding: 0; margin-right: 12px;
+    }
+
+    .page { padding: 24px 20px 40px; display: none; }
+    .page.active { display: block; }
+
+    /* HOME */
+    .avatar-wrap { text-align: center; margin-bottom: 32px; padding-top: 8px; }
+    .avatar {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg,#3B6BF5,#5B3BF5);
+      margin: 0 auto 16px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 8px 24px rgba(59,107,245,0.3);
+    }
+    .greeting { font-size: 22px; font-weight: 800; color: #1A1D2E; line-height: 1.4; }
+    .greeting em { color: #3B6BF5; font-style: normal; }
+
+    .vote-card {
+      background: #fff; border-radius: 16px; padding: 20px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06); margin-bottom: 16px;
+    }
+    .org-badge {
+      font-size: 11px; color: #3B6BF5; font-weight: 700;
+      background: #EEF3FF; padding: 3px 8px; border-radius: 4px;
+      display: inline-block; margin-bottom: 12px;
+    }
+    .vote-card h2 { font-size: 19px; font-weight: 800; color: #1A1D2E; margin-bottom: 6px; line-height: 1.4; }
+    .deadline { font-size: 12px; color: #8891B0; margin-bottom: 16px; }
+    .deadline .dday { color: #FF5C5C; font-weight: 700; }
+    .progress-label { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .progress-label span:first-child { font-size: 12px; color: #8891B0; }
+    .progress-label span:last-child { font-size: 13px; font-weight: 700; color: #3B6BF5; }
+    .progress-bar { height: 6px; background: #F0F2F8; border-radius: 3px; overflow: hidden; }
+    .progress-fill {
+      height: 100%; background: linear-gradient(90deg,#3B6BF5,#5B3BF5);
+      border-radius: 3px; transition: width 0.5s;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: linear-gradient(135deg,#3B6BF5,#5B3BF5);
+      color: #fff; border: none; border-radius: 14px;
+      padding: 18px; font-size: 17px; font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(59,107,245,0.35);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-primary:disabled { background: #B0B8D8; box-shadow: none; cursor: not-allowed; }
+    .link-result {
+      text-align: center; margin-top: 20px;
+      font-size: 13px; color: #8891B0;
+      text-decoration: underline; cursor: pointer;
+      background: none; border: none; width: 100%;
+    }
+
+    /* VOTE PAGE */
+    .vote-banner {
+      background: linear-gradient(135deg,#3B6BF5,#5B3BF5);
+      border-radius: 16px; padding: 20px; margin-bottom: 24px; color: #fff;
+    }
+    .vote-banner .org { font-size: 12px; opacity: 0.8; margin-bottom: 6px; }
+    .vote-banner h2 { font-size: 18px; font-weight: 800; line-height: 1.4; margin-bottom: 8px; }
+    .vote-banner p { font-size: 12px; opacity: 0.7; line-height: 1.6; }
+
+    .field-label { font-size: 13px; font-weight: 700; color: #4A4F6A; display: block; margin-bottom: 8px; }
+    .field-group { margin-bottom: 20px; }
+    input[type=text] {
+      width: 100%; border: 1.5px solid #E0E4F0; border-radius: 12px;
+      padding: 14px 16px; font-size: 15px; outline: none;
+      background: #fff; color: #1A1D2E;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    input[type=text]:focus { border-color: #3B6BF5; }
+
+    .option-card {
+      border: 2px solid #EEF0F8; border-radius: 14px;
+      padding: 16px 18px; margin-bottom: 10px;
+      background: #fff; cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+    }
+    .option-card.selected { background: rgba(59,107,245,0.04); }
+    .option-label {
+      font-size: 11px; font-weight: 800; letter-spacing: 0.5px;
+      padding: 2px 8px; border-radius: 4px;
+      display: inline-block; margin-bottom: 6px;
+    }
+    .option-sub { font-size: 12px; color: #8891B0; margin-bottom: 4px; }
+    .option-title { font-size: 15px; font-weight: 800; color: #1A1D2E; line-height: 1.4; }
+    .option-desc { font-size: 12px; color: #6B7494; margin-top: 6px; line-height: 1.6; }
+    .check-circle {
+      position: absolute; top: 16px; right: 16px;
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid #D0D4E8;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      font-size: 12px; font-weight: 900; color: #fff;
+    }
+
+    .error-box {
+      background: #FFF0F0; color: #FF5C5C;
+      font-size: 13px; padding: 10px 14px;
+      border-radius: 8px; text-align: center;
+      margin-bottom: 12px;
+    }
+
+    /* RESULT PAGE */
+    .result-meta { margin-bottom: 16px; }
+    .result-meta .org { font-size: 11px; color: #8891B0; margin-bottom: 4px; }
+    .result-meta h2 { font-size: 20px; font-weight: 800; color: #1A1D2E; line-height: 1.4; }
+
+    .chart-card {
+      background: #fff; border-radius: 16px; padding: 20px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06); margin-bottom: 16px;
+    }
+    .chart-row { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .total-info .label { font-size: 13px; color: #8891B0; margin-bottom: 4px; }
+    .total-info .num { font-size: 28px; font-weight: 900; color: #1A1D2E; }
+    .total-info .num span { font-size: 14px; font-weight: 600; color: #8891B0; }
+    .total-info .leading { font-size: 12px; color: #3B6BF5; font-weight: 700; margin-top: 4px; }
+    .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #6B7494; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    .bar-card {
+      background: #fff; border-radius: 16px; padding: 20px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.06); margin-bottom: 16px;
+    }
+    .bar-card h3 { font-size: 14px; font-weight: 800; color: #1A1D2E; margin-bottom: 16px; }
+    .bar-item { margin-bottom: 16px; }
+    .bar-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; }
+    .bar-label-group .cand-name { font-size: 12px; font-weight: 700; }
+    .bar-label-group .cand-title { font-size: 11px; color: #8891B0; margin-top: 2px; }
+    .leading-badge {
+      font-size: 10px; padding: 2px 6px; border-radius: 4px;
+      font-weight: 700; margin-left: 6px;
+    }
+    .bar-count .votes { font-size: 18px; font-weight: 900; color: #1A1D2E; }
+    .bar-count .pct { font-size: 11px; color: #8891B0; }
+    .bar-track { height: 8px; background: #F0F2F8; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+    .bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s; }
+    .bar-names { font-size: 11px; color: #B0B8D8; }
+
+    .my-vote-box {
+      background: #EEF3FF; border-radius: 12px; padding: 14px 16px;
+      margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+    }
+    .my-vote-box .icon { font-size: 20px; }
+    .my-vote-box .title { font-size: 13px; font-weight: 700; color: #3B6BF5; }
+    .my-vote-box .desc { font-size: 12px; color: #6B7494; }
+
+    svg text { font-family: 'Apple SD Gothic Neo', sans-serif; }
+  </style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const API = "https://eixhbofjvctzailqnngw.supabase.co/functions/v1/kt-votes";
+const DEADLINE = new Date("2025-05-31");
+const CANDIDATES = [
+  { id:"A", color:"#3B6BF5", title:"AX 통신 유통 Platform Company", sub:"대한민국 연결을 완성하는", desc:"전국 유통망 기반, 고객의 최접점에서 KT의 연결을 완성하는 핵심 수행 주체" },
+  { id:"B", color:"#5B3BF5", title:"통신 전문 Company", sub:"AX 전환으로 새로운 유통 가치를 창출하는", desc:"AX 역량으로 유통 구조를 혁신하고 고객 맞춤형 서비스를 제공하는 기업" },
+  { id:"C", color:"#3BB8F5", title:"AX 기반 통신 유통 Platform", sub:"고객의 삶의 변화를 리딩하는 기업", desc:"온오프라인 통합 플랫폼으로 고객 구매 경험을 혁신하고 일상의 변화를 선도" },
+];
+
+let state = { page:"home", name:"", selected:null, votes:[], error:"", submitting:false, myVote:null };
+
+async function fetchVotes() {
+  try {
+    const r = await fetch(API);
+    return r.ok ? r.json() : [];
+  } catch { return []; }
+}
+
+async function insertVote(name, choice) {
+  try {
+    const r = await fetch(API, {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({name, choice})
+    });
+    const d = await r.json();
+    if (r.status === 409) return {error:"이미 투표하셨습니다."};
+    if (!r.ok) return {error: d.error || "오류가 발생했습니다."};
+    return {ok:true};
+  } catch { return {error:"서버에 연결할 수 없습니다."}; }
+}
+
+function countFor(id) { return state.votes.filter(v=>v.choice===id).length; }
+function dday() { return Math.max(0, Math.ceil((DEADLINE - new Date()) / 86400000)); }
+function leading() { return CANDIDATES.reduce((m,c) => countFor(c.id) > countFor(m.id) ? c : m, CANDIDATES[0]); }
+
+// ── SVG Donut ──
+function donutSVG(votes) {
+  const total = votes.length;
+  const r = 54, cx = 70, cy = 70, stroke = 18;
+  const circ = 2 * Math.PI * r;
+  let offset = 0;
+  const segs = CANDIDATES.map(c => {
+    const cnt = votes.filter(v=>v.choice===c.id).length;
+    const pct = total > 0 ? cnt/total : 0;
+    const s = {c, cnt, pct, offset};
+    offset += pct * circ;
+    return s;
+  });
+  const lead = segs.reduce((m,s)=>s.cnt>m.cnt?s:m, segs[0]);
+  let arcs = total === 0
+    ? `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E8EAF2" stroke-width="${stroke}"/>`
+    : segs.filter(s=>s.cnt>0).map(s =>
+        `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.c.color}" stroke-width="${stroke}"
+          stroke-dasharray="${s.pct*circ} ${circ}" stroke-dashoffset="${-s.offset}"
+          style="transform:rotate(-90deg);transform-origin:${cx}px ${cy}px"/>`
+      ).join('');
+  return `<svg width="140" height="140" viewBox="0 0 140 140">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#F0F2F8" stroke-width="${stroke}"/>
+    ${arcs}
+    <text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="18" font-weight="800" fill="#1A1D2E">${total>0?Math.round(lead.pct*100):0}%</text>
+    <text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" fill="#8891B0">최다 득표</text>
+  </svg>`;
+}
+
+// ── RENDER ──
+function render() {
+  const {page, name, selected, votes, error, submitting, myVote} = state;
+  const total = votes.length;
+  const lead = leading();
+
+  let html = `<div class="header">`;
+  if (page === "home") {
+    html += `<span class="header-title"><span>KT M&amp;S</span> 전자투표</span>
+      <button class="btn-ghost" onclick="go('result')">결과 보기 +</button>`;
+  } else if (page === "vote") {
+    html += `<div style="display:flex;align-items:center">
+      <button class="btn-back" onclick="go('home')">←</button>
+      <span class="header-title">비전 후보 선택</span></div>`;
+  } else {
+    html += `<div style="display:flex;align-items:center">
+      <button class="btn-back" onclick="go('home')">←</button>
+      <span class="header-title">투표 결과</span></div>
+      <span style="font-size:11px;color:#3B6BF5;background:#EEF3FF;padding:4px 10px;border-radius:10px;font-weight:700">진행중 · D-${dday()}</span>`;
+  }
+  html += `</div>`;
+
+  // HOME
+  if (page === "home") {
+    html += `<div class="page active">
+      <div class="avatar-wrap">
+        <div class="avatar">🗳️</div>
+        <div class="greeting">KT M&amp;S 임직원님,<br/><em>비전 투표에 참여해보세요!</em></div>
+      </div>
+      <div class="vote-card">
+        <span class="org-badge">KT M&amp;S</span>
+        <h2>M&amp;S 비전 체계<br/>방향성 투표</h2>
+        <div class="deadline">마감 <span class="dday">D-${dday()}</span> · ${DEADLINE.toLocaleDateString("ko-KR")} 까지</div>
+        <div class="progress-label"><span>참여 인원</span><span>${total}명 참여</span></div>
+        <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(total*2,100)}%"></div></div>
+      </div>
+      <button class="btn-primary" onclick="go('vote')">투표 시작하기 →</button>
+      <button class="link-result" onclick="go('result')">KT M&amp;S '비전 투표' 결과 보기 &gt;</button>
+    </div>`;
+  }
+
+  // VOTE
+  if (page === "vote") {
+    const opts = CANDIDATES.map(c => {
+      const sel = selected === c.id;
+      return `<div class="option-card${sel?' selected':''}" onclick="select('${c.id}')"
+        style="${sel?`border-color:${c.color};box-shadow:0 4px 16px ${c.color}22`:''}">
+        <div class="check-circle" style="${sel?`background:${c.color};border-color:${c.color}`:''}">
+          ${sel?'✓':''}
+        </div>
+        <div class="option-label" style="color:${c.color};background:${c.color}18">후보 ${c.id}</div>
+        <div class="option-sub">${c.sub}</div>
+        <div class="option-title">[${c.title}]</div>
+        <div class="option-desc">${c.desc}</div>
+      </div>`;
+    }).join('');
+    html += `<div class="page active">
+      <div class="vote-banner">
+        <div class="org">🏢 KT M&amp;S · 진행중</div>
+        <h2>M&amp;S 비전 체계<br/>방향성 투표</h2>
+        <p>KT 新 AX Platform Company 비전에 맞춰<br/>M&amp;S 비전을 재정립합니다.</p>
+      </div>
+      <div class="field-group">
+        <label class="field-label">이름 입력 (기명 투표)</label>
+        <input type="text" placeholder="본인 이름을 입력하세요" value="${name.replace(/"/g,'&quot;')}" oninput="setName(this.value)"/>
+      </div>
+      <div class="field-group">
+        <label class="field-label">후보 선택</label>
+        ${opts}
+      </div>
+      ${error ? `<div class="error-box">${error}</div>` : ''}
+      <button class="btn-primary" onclick="vote()" ${submitting?'disabled':''}>
+        ${submitting ? '투표 중...' : '투표하기'}
+      </button>
+    </div>`;
+  }
+
+  // RESULT
+  if (page === "result") {
+    const bars = CANDIDATES.map(c => {
+      const cnt = countFor(c.id);
+      const pct = total > 0 ? Math.round(cnt/total*100) : 0;
+      const isLead = cnt > 0 && cnt === countFor(lead.id);
+      const names = votes.filter(v=>v.choice===c.id).map(v=>v.name).join(', ');
+      return `<div class="bar-item">
+        <div class="bar-header">
+          <div class="bar-label-group">
+            <div class="cand-name" style="color:${c.color}">후보 ${c.id}
+              ${isLead?`<span class="leading-badge" style="color:${c.color};background:${c.color}18">선두</span>`:''}
+            </div>
+            <div class="cand-title">${c.title}</div>
+          </div>
+          <div class="bar-count">
+            <div class="votes">${cnt}<span style="font-size:12px;color:#8891B0;font-weight:600">표</span></div>
+            <div class="pct">${pct}%</div>
+          </div>
+        </div>
+        <div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${c.color}"></div></div>
+        <div class="bar-names">${names || '—'}</div>
+      </div>`;
+    }).join('');
+    const legend = CANDIDATES.map(c =>
+      `<div class="legend-item"><div class="legend-dot" style="background:${c.color}"></div>후보 ${c.id}</div>`
+    ).join('');
+    html += `<div class="page active">
+      <div class="result-meta">
+        <div class="org">🏢 KT M&amp;S · 2025년 비전 투표</div>
+        <h2>M&amp;S 비전 체계<br/>방향성 투표</h2>
+      </div>
+      <div class="chart-card">
+        <div class="chart-row">
+          ${donutSVG(votes)}
+          <div class="total-info">
+            <div class="label">총 참여 인원</div>
+            <div class="num">${total}<span>명</span></div>
+            ${total>0?`<div class="leading">현재 후보 ${lead.id} 선두</div>`:''}
+          </div>
+        </div>
+        <div class="legend">${legend}</div>
+      </div>
+      <div class="bar-card">
+        <h3>후보별 득표 현황</h3>
+        ${bars}
+      </div>
+      ${myVote ? `<div class="my-vote-box"><div class="icon">✅</div><div><div class="title">투표 완료</div><div class="desc">후보 ${myVote}에 투표하셨습니다.</div></div></div>` : ''}
+      <button class="btn-primary" onclick="go('vote')">${myVote?'다시 투표하기':'투표하러 가기'}</button>
+    </div>`;
+  }
+
+  document.getElementById('app').innerHTML = html;
+}
+
+function go(page) { state.page = page; state.error = ""; render(); }
+function setName(v) { state.name = v; state.error = ""; }
+function select(id) { state.selected = id; state.error = ""; render(); }
+
+async function vote() {
+  if (!state.name.trim()) { state.error = "이름을 입력해주세요."; render(); return; }
+  if (!state.selected) { state.error = "후보를 선택해주세요."; render(); return; }
+  if (state.votes.find(v=>v.name.trim()===state.name.trim())) { state.error = "이미 같은 이름으로 투표가 완료되었습니다."; render(); return; }
+  state.submitting = true; render();
+  const result = await insertVote(state.name.trim(), state.selected);
+  if (result.ok) {
+    state.myVote = state.selected;
+    state.votes = await fetchVotes();
+    state.page = "result";
+    state.error = "";
+  } else {
+    state.error = result.error;
+  }
+  state.submitting = false;
+  render();
+}
+
+// init
+fetchVotes().then(v => { state.votes = v; render(); });
+setInterval(() => fetchVotes().then(v => { state.votes = v; if (state.page==='result') render(); }), 5000);
+render();
+</script>
+</body>
+</html>
